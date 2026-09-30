@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAPTAP - Reaction Speed</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(168,85,247,.22), transparent 25%),
+        radial-gradient(circle at 80% 80%, rgba(132,255,0,.12), transparent 25%),
+        linear-gradient(135deg, #08000f, #1c0730, #08000f);
+    color: white;
+}
+
+.game {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.stars,
+.stars::before,
+.stars::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+}
+
+.stars {
+    opacity: .6;
+    background-image:
+        radial-gradient(circle, #ffffff 1px, transparent 1.5px),
+        radial-gradient(circle, #baff39 1px, transparent 1.5px);
+    background-size: 90px 90px, 140px 140px;
+    background-position: 10px 20px, 50px 70px;
+}
+
+/* TOP BAR */
+
+.topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 22px;
+
+    background: rgba(10, 0, 20, .88);
+    border-bottom: 2px solid #a8ff00;
+
+    z-index: 50;
+    backdrop-filter: blur(8px);
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: 1000;
+    letter-spacing: 3px;
+    color: white;
+}
+
+.logo span {
+    color: #b6ff00;
+    text-shadow: 0 0 15px #8cff00;
+}
+
+.stats {
+    display: flex;
+    gap: 22px;
+}
+
+.stat {
+    text-align: center;
+    min-width: 70px;
+}
+
+.stat-label {
+    font-size: 10px;
+    color: #c7abd8;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #eaff00;
+}
+
+/* ARENA */
+
+.arena {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 70px;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.progress-container {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    right: 20px;
+
+    height: 9px;
+
+    background: rgba(255,255,255,.12);
+    border-radius: 20px;
+    overflow: hidden;
+
+    z-index: 20;
+}
+
+.progress {
+    width: 100%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #8cff00,
+        #eaff00,
+        #a855f7
+    );
+
+    border-radius: 20px;
+
+    transition: width .1s linear;
+}
+
+.message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    text-align: center;
+    pointer-events: none;
+
+    opacity: .7;
+    z-index: 2;
+}
+
+.message h2 {
+    font-size: 25px;
+    color: #b6ff00;
+    text-shadow: 0 0 15px #8cff00;
+}
+
+.message p {
+    margin-top: 8px;
+    color: #d4bee1;
+}
+
+/* MONSTER */
+
+.monster {
+    position: absolute;
+
+    width: 145px;
+    height: 145px;
+
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+
+    z-index: 10;
+
+    transition:
+        left .12s ease-out,
+        top .12s ease-out;
+
+    filter:
+        drop-shadow(0 0 8px rgba(170,255,0,.8))
+        drop-shadow(0 0 25px rgba(168,85,247,.55));
+
+    display: none;
+}
+
+.monster:hover {
+    filter:
+        drop-shadow(0 0 12px rgba(170,255,0,1))
+        drop-shadow(0 0 35px rgba(168,85,247,.8));
+}
+
+.monster.hit {
+    animation: monsterHit .18s ease-out;
+}
+
+@keyframes monsterHit {
+    0% {
+        transform: scale(1);
+    }
+
+    35% {
+        transform: scale(.75) rotate(-7deg);
+    }
+
+    70% {
+        transform: scale(1.18) rotate(7deg);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* COMBO */
+
+.combo {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+
+    padding: 12px 18px;
+
+    border: 1px solid #a855f7;
+    border-radius: 14px;
+
+    background: rgba(30,5,50,.85);
+
+    z-index: 20;
+}
+
+.combo strong {
+    color: #eaff00;
+    font-size: 20px;
+}
+
+/* SPEED */
+
+.speed-box {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+
+    width: 190px;
+
+    padding: 13px;
+
+    border: 1px solid #a855f7;
+    border-radius: 14px;
+
+    background: rgba(30,5,50,.85);
+
+    z-index: 20;
+}
+
+.speed-title {
+    color: #c9b0d9;
+    font-size: 11px;
+}
+
+.speed-number {
+    color: #b6ff00;
+    font-size: 27px;
+    font-weight: 900;
+}
+
+.speed-bar {
+    width: 100%;
+    height: 7px;
+
+    margin-top: 7px;
+
+    background: rgba(255,255,255,.1);
+
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.speed-fill {
+    width: 0%;
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #8cff00,
+        #eaff00
+    );
+
+    transition: width .2s;
+}
+
+/* PARTICLES */
+
+.particle {
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #eaff00;
+
+    pointer-events: none;
+
+    z-index: 30;
+
+    animation: particleFly .55s ease-out forwards;
+}
+
+@keyframes particleFly {
+    from {
+        opacity: 1;
+        transform: translate(0,0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform:
+            translate(var(--x),var(--y))
+            scale(.1);
+    }
+}
+
+/* TAP TEXT */
+
+.tap-text {
+    position: absolute;
+
+    color: #eaff00;
+
+    font-size: 25px;
+    font-weight: 1000;
+
+    pointer-events: none;
+
+    z-index: 40;
+
+    animation: tapPop .5s ease-out forwards;
+}
+
+@keyframes tapPop {
+    from {
+        opacity: 1;
+        transform:
+            translate(-50%,-50%)
+            scale(.5);
+    }
+
+    to {
+        opacity: 0;
+        transform:
+            translate(-50%,-110px)
+            scale(1.3);
+    }
+}
+
+/* SHAKE */
+
+.shake {
+    animation: screenShake .22s;
+}
+
+@keyframes screenShake {
+    0% {
+        transform: translate(0);
+    }
+
+    20% {
+        transform: translate(-7px,3px);
+    }
+
+    40% {
+        transform: translate(6px,-3px);
+    }
+
+    60% {
+        transform: translate(-5px,2px);
+    }
+
+    80% {
+        transform: translate(5px,-2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+/* MENU */
+
+.overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(82,20,120,.45),
+            rgba(5,0,12,.95)
+        );
+
+    backdrop-filter: blur(7px);
+
+    z-index: 100;
+}
+
+.menu-box {
+    width: min(92%, 500px);
+
+    padding: 35px;
+
+    text-align: center;
+
+    border: 2px solid #a855f7;
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(40,8,65,.98),
+            rgba(18,2,30,.98)
+        );
+
+    box-shadow:
+        0 0 40px rgba(168,85,247,.35),
+        inset 0 0 35px rgba(140,255,0,.04);
+}
+
+.title {
+    font-size: 55px;
+    font-weight: 1000;
+    letter-spacing: 3px;
+
+    color: #b6ff00;
+
+    text-shadow:
+        0 0 10px #8cff00,
+        0 0 30px rgba(140,255,0,.5);
+}
+
+.title span {
+    color: white;
+}
+
+.subtitle {
+    color: #d9b9eb;
+    margin-top: 5px;
+    margin-bottom: 28px;
+}
+
+/* BUTTONS */
+
+.menu-button {
+    width: 100%;
+
+    min-height: 55px;
+
+    margin-top: 11px;
+
+    border: 2px solid #7137a5;
+    border-radius: 13px;
+
+    background: #25083c;
+
+    color: white;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.menu-button:hover {
+    transform: translateY(-2px);
+
+    border-color: #b6ff00;
+
+    background: #5d2290;
+
+    color: #eaff00;
+
+    box-shadow:
+        0 0 20px rgba(168,85,247,.35);
+}
+
+.start-button {
+    border: none;
+
+    background:
+        linear-gradient(
+            135deg,
+            #8cff00,
+            #dfff38
+        );
+
+    color: #19002a;
+
+    box-shadow:
+        0 0 25px rgba(140,255,0,.35);
+}
+
+.start-button:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #b6ff00,
+            #f4ff6b
+        );
+
+    color: #12001f;
+
+    box-shadow:
+        0 0 35px rgba(140,255,0,.7);
+}
+
+/* PANELS */
+
+.panel {
+    display: none;
+}
+
+.panel.active {
+    display: block;
+}
+
+.panel-title {
+    font-size: 28px;
+    color: #b6ff00;
+    margin-bottom: 20px;
+}
+
+.time-label {
+    color: #d7c3e2;
+    margin-bottom: 12px;
+}
+
+.time-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.time-button {
+    flex: 1;
+
+    height: 55px;
+
+    border: 2px solid #7137a5;
+    border-radius: 12px;
+
+    background: #25083c;
+
+    color: white;
+
+    font-size: 17px;
+    font-weight: 900;
+
+    cursor: pointer;
+}
+
+.time-button.selected {
+    background: #7c3aed;
+    border-color: #b6ff00;
+    color: #eaff00;
+
+    box-shadow:
+        0 0 15px rgba(168,85,247,.4);
+}
+
+.back-button {
+    margin-top: 20px;
+}
+
+/* HOW TO PLAY */
+
+.instructions {
+    text-align: left;
+
+    color: #d7c3e2;
+
+    line-height: 1.8;
+
+    font-size: 15px;
+}
+
+.instructions strong {
+    color: #b6ff00;
+}
+
+.instruction-icon {
+    color: #eaff00;
+    font-size: 22px;
+}
+
+/* READY SCREEN */
+
+.ready-screen {
+    position: absolute;
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(82,20,120,.45),
+            rgba(5,0,12,.96)
+        );
+
+    backdrop-filter: blur(7px);
+
+    z-index: 150;
+}
+
+.ready-box {
+    width: min(92%, 500px);
+
+    padding: 35px;
+
+    text-align: center;
+
+    border: 2px solid #a855f7;
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(40,8,65,.98),
+            rgba(18,2,30,.98)
+        );
+
+    box-shadow:
+        0 0 40px rgba(168,85,247,.35),
+        inset 0 0 35px rgba(140,255,0,.04);
+}
+
+.ready-title {
+    font-size: 55px;
+    font-weight: 1000;
+
+    color: #b6ff00;
+
+    text-shadow:
+        0 0 10px #8cff00,
+        0 0 30px rgba(140,255,0,.5);
+}
+
+.ready-text {
+    margin-top: 10px;
+    margin-bottom: 25px;
+
+    color: #d9b9eb;
+    font-size: 17px;
+}
+
+.countdown {
+    display: none;
+
+    font-size: 100px;
+    font-weight: 1000;
+
+    color: #eaff00;
+
+    text-shadow:
+        0 0 15px #8cff00,
+        0 0 40px rgba(140,255,0,.6);
+
+    animation: countdownPop .8s ease-out;
+}
+
+@keyframes countdownPop {
+    0% {
+        transform: scale(.4);
+        opacity: 0;
+    }
+
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* RESULTS */
+
+.results {
+    position: absolute;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(7,0,15,.92);
+
+    backdrop-filter: blur(8px);
+
+    z-index: 200;
+}
+
+.result-box {
+    width: min(92%, 450px);
+
+    padding: 35px;
+
+    text-align: center;
+
+    border: 2px solid #b6ff00;
+
+    border-radius: 25px;
+
+    background: #25083d;
+
+    box-shadow:
+        0 0 40px rgba(140,255,0,.2);
+}
+
+.result-title {
+    font-size: 34px;
+    color: #b6ff00;
+}
+
+.final-score {
+    margin: 10px 0;
+
+    font-size: 75px;
+
+    font-weight: 1000;
+
+    color: white;
+}
+
+.result-speed {
+    margin-top: 8px;
+
+    font-size: 24px;
+    font-weight: 900;
+
+    color: #eaff00;
+}
+
+.result-message {
+    margin: 15px 0 25px;
+
+    color: #d5bfdf;
+
+    line-height: 1.5;
+}
+
+.result-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.result-button {
+    flex: 1;
+
+    min-height: 52px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    font-weight: 900;
+}
+
+.restart-button {
+    background: #8cff00;
+    color: #160020;
+}
+
+.home-button {
+    background: #7c3aed;
+    color: white;
+}
+
+/* FULLSCREEN BUTTON INSIDE SETTINGS */
+
+.settings-fullscreen-button {
+    margin-top: 12px;
+}
+
+/* EFFORT */
+
+.effort {
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    border: 0 solid #eaff00;
+
+    z-index: 4;
+
+    transition: border-width .15s;
+}
+
+/* MOBILE */
+
+@media(max-width:600px) {
+
+    .topbar {
+        min-height: 62px;
+        padding: 9px 10px;
+    }
+
+    .arena {
+        top: 62px;
+    }
+
+    .logo {
+        font-size: 19px;
+    }
+
+    .stats {
+        gap: 6px;
+    }
+
+    .stat {
+        min-width: 50px;
+    }
+
+    .stat-label {
+        font-size: 8px;
+    }
+
+    .stat-value {
+        font-size: 17px;
+    }
+
+    .monster {
+        width: 115px;
+        height: 115px;
+    }
+
+    .menu-box {
+        padding: 25px 20px;
+    }
+
+    .title {
+        font-size: 40px;
+    }
+
+    .speed-box {
+        width: 150px;
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .combo {
+        left: 10px;
+        bottom: 10px;
+    }
+
+    .ready-box {
+        padding: 25px 20px;
+    }
+
+    .ready-title {
+        font-size: 42px;
+    }
+
+    .countdown {
+        font-size: 80px;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="game" id="game">
+
+<div class="stars"></div>
+
+<!-- TOP BAR -->
+
+<div class="topbar">
+
+```
+<div class="logo">
+    TAP<span>TAP</span>
+</div>
+
+<div class="stats">
+
+    <div class="stat">
+        <div class="stat-label">TIME</div>
+        <div class="stat-value" id="time">30</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-label">TAPS</div>
+        <div class="stat-value" id="taps">0</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-label">BEST</div>
+        <div class="stat-value" id="best">0</div>
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- GAME AREA -->
+
+<div class="arena" id="arena">
+
+```
+<div class="progress-container">
+    <div class="progress" id="progress"></div>
+</div>
+
+<div class="message">
+    <h2>HIT THE MONSTER!</h2>
+    <p>Tap it as fast as you can!</p>
+</div>
+
+<div class="effort" id="effort"></div>
+
+<!-- ANGRY GREEN MONSTER -->
+
+<div
+    class="monster"
+    id="monster"
+    role="button"
+    aria-label="Angry green monster"
+>
+
+    <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 200 200"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+
+        <!-- LEFT HORN -->
+
+        <path
+            d="M55 45 L30 8 L65 28 L75 60 Z"
+            fill="#ffd900"
+            stroke="#ffef61"
+            stroke-width="5"
+        />
+
+        <!-- RIGHT HORN -->
+
+        <path
+            d="M145 45 L170 8 L135 28 L125 60 Z"
+            fill="#ffd900"
+            stroke="#ffef61"
+            stroke-width="5"
+        />
+
+        <!-- HORN SHINE -->
+
+        <path
+            d="M40 18 L54 33"
+            stroke="#fff58a"
+            stroke-width="6"
+            stroke-linecap="round"
+        />
+
+        <path
+            d="M160 18 L146 33"
+            stroke="#fff58a"
+            stroke-width="6"
+            stroke-linecap="round"
+        />
+
+        <!-- HEAD -->
+
+        <path
+            d="
+            M48 45
+            Q100 20 152 45
+            L172 82
+            L165 128
+            Q150 157 100 163
+            Q50 157 35 128
+            L28 82
+            Z"
+            fill="#8bdc18"
+            stroke="#4e9d13"
+            stroke-width="6"
+        />
+
+        <!-- HEAD LIGHT -->
+
+        <path
+            d="
+            M50 60
+            Q78 38 105 43
+            L92 55
+            Q70 50 52 70
+            Z"
+            fill="#baff3d"
+            opacity=".75"
+        />
+
+        <!-- ANGRY EYEBROWS -->
+
+        <path
+            d="M48 72 L84 84"
+            stroke="#26320d"
+            stroke-width="13"
+            stroke-linecap="round"
+        />
+
+        <path
+            d="M152 72 L116 84"
+            stroke="#26320d"
+            stroke-width="13"
+            stroke-linecap="round"
+        />
+
+        <!-- LEFT EYE -->
+
+        <ellipse
+            cx="67"
+            cy="92"
+            rx="16"
+            ry="13"
+            fill="#170009"
+        />
+
+        <circle
+            cx="67"
+            cy="92"
+            r="8"
+            fill="#ff1616"
+        />
+
+        <circle
+            cx="70"
+            cy="89"
+            r="3"
+            fill="white"
+        />
+
+        <!-- RIGHT EYE -->
+
+        <ellipse
+            cx="133"
+            cy="92"
+            rx="16"
+            ry="13"
+            fill="#170009"
+        />
+
+        <circle
+            cx="133"
+            cy="92"
+            r="8"
+            fill="#ff1616"
+        />
+
+        <circle
+            cx="136"
+            cy="89"
+            r="3"
+            fill="white"
+        />
+
+        <!-- NOSE -->
+
+        <path
+            d="M94 108 L106 108"
+            stroke="#35630c"
+            stroke-width="7"
+            stroke-linecap="round"
+        />
+
+        <!-- ANGRY MOUTH -->
+
+        <path
+            d="
+            M62 123
+            Q100 143 138 123
+            Q128 151 100 153
+            Q72 151 62 123
+            Z"
+            fill="#18200a"
+        />
+
+        <!-- TEETH -->
+
+        <path
+            d="
+            M75 130
+            L84 140
+            L91 133
+            L100 143
+            L109 133
+            L116 140
+            L125 130"
+            fill="#ffffff"
+        />
+
+        <!-- BODY -->
+
+        <path
+            d="
+            M57 154
+            Q100 143 143 154
+            L153 192
+            L47 192
+            Z"
+            fill="#39414b"
+            stroke="#252a31"
+            stroke-width="5"
+        />
+
+        <!-- ARMS -->
+
+        <path
+            d="M58 160 Q35 162 35 184"
+            stroke="#6dbf16"
+            stroke-width="16"
+            stroke-linecap="round"
+        />
+
+        <path
+            d="M142 160 Q165 162 165 184"
+            stroke="#6dbf16"
+            stroke-width="16"
+            stroke-linecap="round"
+        />
+
+    </svg>
+
+</div>
+
+<!-- COMBO -->
+
+<div class="combo">
+    COMBO:
+    <strong id="combo">0</strong>
+</div>
+
+<!-- SPEED -->
+
+<div class="speed-box">
+
+    <div class="speed-title">
+        REACTION SPEED
+    </div>
+
+    <div class="speed-number">
+        <span id="speed">0</span>%
+    </div>
+
+    <div class="speed-bar">
+        <div
+            class="speed-fill"
+            id="speedFill">
+        </div>
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- HOME MENU -->
+
+<div class="overlay" id="menu">
+
+```
+<div class="menu-box">
+
+    <!-- MAIN -->
+
+    <div id="mainPanel" class="panel active">
+
+        <div class="title">
+            TAP<span>TAP</span>
+        </div>
+
+        <div class="subtitle">
+            REACTION SPEED CHALLENGE
+        </div>
+
+        <button
+            class="menu-button start-button"
+            id="startBtn"
+        >
+            ▶ START GAME
+        </button>
+
+        <button
+            class="menu-button"
+            id="settingsBtn"
+        >
+            ⚙ SETTINGS
+        </button>
+
+        <button
+            class="menu-button"
+            id="howBtn"
+        >
+            📖 HOW TO PLAY
+        </button>
+
+    </div>
+
+
+    <!-- SETTINGS -->
+
+    <div id="settingsPanel" class="panel">
+
+        <div class="panel-title">
+            ⚙ GAME SETTINGS
+        </div>
+
+        <div class="time-label">
+            SELECT GAME TIME
+        </div>
+
+        <div class="time-buttons">
+
+            <button
+                class="time-button selected"
+                data-time="30">
+                30 SEC
+            </button>
+
+            <button
+                class="time-button"
+                data-time="40">
+                40 SEC
+            </button>
+
+            <button
+                class="time-button"
+                data-time="50">
+                50 SEC
+            </button>
+
+        </div>
+
+        <!-- FULLSCREEN NOW INSIDE SETTINGS -->
+
+        <button
+            class="menu-button settings-fullscreen-button"
+            id="fullscreenBtn"
+        >
+            ⛶ FULLSCREEN
+        </button>
+
+        <button
+            class="menu-button back-button"
+            id="settingsBack"
+        >
+            ← BACK
+        </button>
+
+    </div>
+
+
+    <!-- HOW TO PLAY -->
+
+    <div id="howPanel" class="panel">
+
+        <div class="panel-title">
+            📖 HOW TO PLAY
+        </div>
+
+        <div class="instructions">
+
+            <p>
+                👹 <strong>1.</strong>
+                An angry green monster will appear.
+            </p>
+
+            <p>
+                👆 <strong>2.</strong>
+                Tap the monster as quickly as possible.
+            </p>
+
+            <p>
+                ⚡ <strong>3.</strong>
+                The monster moves after every tap.
+            </p>
+
+            <p>
+                🔥 <strong>4.</strong>
+                Build your combo to create stronger effects.
+            </p>
+
+            <p>
+                🏆 <strong>5.</strong>
+                Try to beat your best score.
+            </p>
+
+            <p>
+                ⏱️ <strong>6.</strong>
+                Choose 30, 40 or 50 seconds.
+            </p>
+
+        </div>
+
+        <button
+            class="menu-button back-button"
+            id="howBack"
+        >
+            ← BACK
+        </button>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- READY SCREEN -->
+
+<div class="ready-screen" id="readyScreen">
+
+```
+<div class="ready-box">
+
+    <div class="ready-title" id="readyTitle">
+        READY?
+    </div>
+
+    <div class="ready-text" id="readyText">
+        Get ready to tap the monster!
+    </div>
+
+    <button
+        class="menu-button start-button"
+        id="okayBtn"
+    >
+        ✓ OKAY
+    </button>
+
+    <div
+        class="countdown"
+        id="countdown">
+        3
+    </div>
+
+</div>
+```
+
+</div>
+
+<!-- RESULTS -->
+
+<div class="results" id="results">
+
+```
+<div class="result-box">
+
+    <div class="result-title">
+        👹 TIME'S UP!
+    </div>
+
+    <div class="final-score" id="finalScore">
+        0
+    </div>
+
+    <div>
+        TOTAL TAPS
+    </div>
+
+    <div class="result-speed">
+        SPEED:
+        <span id="finalSpeed">0</span>%
+    </div>
+
+    <div
+        class="result-message"
+        id="resultMessage"
+    >
+        Nice effort!
+    </div>
+
+    <div class="result-buttons">
+
+        <button
+            class="result-button restart-button"
+            id="restartBtn"
+        >
+            🔄 RESTART
+        </button>
+
+        <button
+            class="result-button home-button"
+            id="homeBtn"
+        >
+            🏠 HOME
+        </button>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+</div>
+
+<script>
+
+/* ELEMENTS */
+
+const game =
+    document.getElementById("game");
+
+const arena =
+    document.getElementById("arena");
+
+const monster =
+    document.getElementById("monster");
+
+const menu =
+    document.getElementById("menu");
+
+const results =
+    document.getElementById("results");
+
+const readyScreen =
+    document.getElementById("readyScreen");
+
+const readyTitle =
+    document.getElementById("readyTitle");
+
+const readyText =
+    document.getElementById("readyText");
+
+const okayBtn =
+    document.getElementById("okayBtn");
+
+const countdown =
+    document.getElementById("countdown");
+
+const mainPanel =
+    document.getElementById("mainPanel");
+
+const settingsPanel =
+    document.getElementById("settingsPanel");
+
+const howPanel =
+    document.getElementById("howPanel");
+
+const startBtn =
+    document.getElementById("startBtn");
+
+const settingsBtn =
+    document.getElementById("settingsBtn");
+
+const howBtn =
+    document.getElementById("howBtn");
+
+const settingsBack =
+    document.getElementById("settingsBack");
+
+const howBack =
+    document.getElementById("howBack");
+
+const fullscreenBtn =
+    document.getElementById("fullscreenBtn");
+
+const restartBtn =
+    document.getElementById("restartBtn");
+
+const homeBtn =
+    document.getElementById("homeBtn");
+
+const timeDisplay =
+    document.getElementById("time");
+
+const tapsDisplay =
+    document.getElementById("taps");
+
+const bestDisplay =
+    document.getElementById("best");
+
+const speedDisplay =
+    document.getElementById("speed");
+
+const speedFill =
+    document.getElementById("speedFill");
+
+const comboDisplay =
+    document.getElementById("combo");
+
+const progress =
+    document.getElementById("progress");
+
+const effort =
+    document.getElementById("effort");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalSpeed =
+    document.getElementById("finalSpeed");
+
+const resultMessage =
+    document.getElementById("resultMessage");
+
+
+/* GAME VARIABLES */
+
+let gameTime = 30;
+let timeLeft = 30;
+
+let taps = 0;
+let combo = 0;
+
+let bestScore = 0;
+
+let playing = false;
+let timer = null;
+
+let countdownTimer = null;
+
+
+/* SETTINGS */
+
+document
+.querySelectorAll(".time-button")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        document
+        .querySelectorAll(".time-button")
+        .forEach(btn => {
+            btn.classList.remove("selected");
+        });
+
+        button.classList.add("selected");
+
+        gameTime =
+            Number(button.dataset.time);
+
+        timeLeft = gameTime;
+
+        timeDisplay.textContent =
+            gameTime;
+
+    });
+
+});
+
+
+/* PANELS */
+
+function showPanel(panel) {
+
+    mainPanel.classList.remove("active");
+    settingsPanel.classList.remove("active");
+    howPanel.classList.remove("active");
+
+    panel.classList.add("active");
+}
+
+settingsBtn.addEventListener(
+    "click",
+    () => showPanel(settingsPanel)
+);
+
+howBtn.addEventListener(
+    "click",
+    () => showPanel(howPanel)
+);
+
+settingsBack.addEventListener(
+    "click",
+    () => showPanel(mainPanel)
+);
+
+howBack.addEventListener(
+    "click",
+    () => showPanel(mainPanel)
+);
+
+
+/* FULLSCREEN */
+
+async function toggleFullscreen() {
+
+    try {
+
+        if (!document.fullscreenElement) {
+
+            await document.documentElement
+                .requestFullscreen();
+
+        } else {
+
+            await document.exitFullscreen();
+
+        }
+
+    } catch(error) {
+
+        console.log(
+            "Fullscreen error:",
+            error
+        );
+
+    }
+}
+
+fullscreenBtn.addEventListener(
+    "click",
+    toggleFullscreen
+);
+
+
+/* FULLSCREEN TEXT */
+
+document.addEventListener(
+    "fullscreenchange",
+    () => {
+
+        if (document.fullscreenElement) {
+
+            fullscreenBtn.textContent =
+                "⛶ EXIT FULLSCREEN";
+
+        } else {
+
+            fullscreenBtn.textContent =
+                "⛶ FULLSCREEN";
+
+        }
+
+    }
+);
+
+
+/* MOVE MONSTER */
+
+function moveMonster() {
+
+    const rect =
+        arena.getBoundingClientRect();
+
+    const monsterWidth =
+        monster.offsetWidth;
+
+    const monsterHeight =
+        monster.offsetHeight;
+
+    const padding = 25;
+
+    const minY = 45;
+
+    const maxX =
+        Math.max(
+            padding,
+            rect.width -
+            monsterWidth -
+            padding
+        );
+
+    const maxY =
+        Math.max(
+            minY,
+            rect.height -
+            monsterHeight -
+            padding
+        );
+
+    const x =
+        padding +
+        Math.random() *
+        Math.max(
+            1,
+            maxX - padding
+        );
+
+    const y =
+        minY +
+        Math.random() *
+        Math.max(
+            1,
+            maxY - minY
+        );
+
+    monster.style.left =
+        x + "px";
+
+    monster.style.top =
+        y + "px";
+}
+
+
+/* SPEED */
+
+function calculateSpeed() {
+
+    const elapsed =
+        Math.max(
+            1,
+            gameTime - timeLeft
+        );
+
+    const tapsPerSecond =
+        taps / elapsed;
+
+    let percentage =
+        Math.round(
+            (tapsPerSecond / 4) * 100
+        );
+
+    percentage =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                percentage
+            )
+        );
+
+    speedDisplay.textContent =
+        percentage;
+
+    speedFill.style.width =
+        percentage + "%";
+
+    return percentage;
+}
+
+
+/* PARTICLES */
+
+function createParticles(x, y) {
+
+    for(let i = 0; i < 16; i++) {
+
+        const particle =
+            document.createElement("div");
+
+        particle.className =
+            "particle";
+
+        particle.style.left =
+            x + "px";
+
+        particle.style.top =
+            y + "px";
+
+        particle.style.setProperty(
+            "--x",
+            (Math.random() * 150 - 75) + "px"
+        );
+
+        particle.style.setProperty(
+            "--y",
+            (Math.random() * 150 - 75) + "px"
+        );
+
+        arena.appendChild(particle);
+
+        setTimeout(
+            () => particle.remove(),
+            600
+        );
+
+    }
+}
+
+
+/* TAP TEXT */
+
+function createTapText(x, y) {
+
+    const text =
+        document.createElement("div");
+
+    text.className =
+        "tap-text";
+
+    text.textContent =
+        "+" + combo;
+
+    text.style.left =
+        x + "px";
+
+    text.style.top =
+        y + "px";
+
+    arena.appendChild(text);
+
+    setTimeout(
+        () => text.remove(),
+        600
+    );
+}
+
+
+/* EFFORT */
+
+function updateEffort() {
+
+    const border =
+        Math.min(
+            18,
+            combo * 1.3
+        );
+
+    effort.style.borderWidth =
+        border + "px";
+}
+
+
+/* MONSTER CLICK */
+
+monster.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        if (!playing) return;
+
+        event.preventDefault();
+
+        taps++;
+        combo++;
+
+        tapsDisplay.textContent =
+            taps;
+
+        comboDisplay.textContent =
+            combo;
+
+        calculateSpeed();
+
+        updateEffort();
+
+        const rect =
+            arena.getBoundingClientRect();
+
+        const x =
+            event.clientX -
+            rect.left;
+
+        const y =
+            event.clientY -
+            rect.top;
+
+        createParticles(x, y);
+
+        createTapText(x, y);
+
+        monster.classList.remove("hit");
+
+        void monster.offsetWidth;
+
+        monster.classList.add("hit");
+
+        moveMonster();
+
+        if(combo >= 5) {
+
+            game.classList.remove("shake");
+
+            void game.offsetWidth;
+
+            game.classList.add("shake");
+
+        }
+
+    }
+);
+
+
+/* START BUTTON */
+
+startBtn.addEventListener(
+    "click",
+    showReadyScreen
+);
+
+
+/* READY SCREEN */
+
+function showReadyScreen() {
+
+    clearInterval(timer);
+    clearInterval(countdownTimer);
+
+    playing = false;
+
+    monster.style.display = "none";
+
+    menu.style.display = "none";
+
+    results.style.display = "none";
+
+    readyScreen.style.display = "flex";
+
+    readyTitle.textContent = "READY?";
+
+    readyText.textContent =
+        "Get ready to tap the monster!";
+
+    okayBtn.style.display = "block";
+
+    countdown.style.display = "none";
+
+}
+
+
+/* OKAY BUTTON */
+
+okayBtn.addEventListener(
+    "click",
+    startCountdown
+);
+
+
+function startCountdown() {
+
+    okayBtn.style.display = "none";
+
+    readyText.textContent =
+        "Get ready...";
+
+    countdown.style.display = "block";
+
+    let count = 3;
+
+    countdown.textContent = count;
+
+    restartCountdownAnimation();
+
+    countdownTimer =
+        setInterval(() => {
+
+            count--;
+
+            if(count > 0) {
+
+                countdown.textContent =
+                    count;
+
+                restartCountdownAnimation();
+
+            } else {
+
+                clearInterval(countdownTimer);
+
+                countdown.textContent =
+                    "GO!";
+
+                readyTitle.textContent =
+                    "GO!";
+
+                readyText.textContent =
+                    "TAP THE MONSTER!";
+
+                restartCountdownAnimation();
+
+                setTimeout(
+                    beginGame,
+                    500
+                );
+
+            }
+
+        }, 1000);
+}
+
+
+/* COUNTDOWN ANIMATION RESET */
+
+function restartCountdownAnimation() {
+
+    countdown.style.animation = "none";
+
+    void countdown.offsetWidth;
+
+    countdown.style.animation =
+        "countdownPop .8s ease-out";
+}
+
+
+/* ACTUAL GAME START */
+
+function beginGame() {
+
+    readyScreen.style.display = "none";
+
+    monster.style.display = "block";
+
+    startGame();
+
+}
+
+
+/* START GAME */
+
+function startGame() {
+
+    clearInterval(timer);
+
+    playing = true;
+
+    taps = 0;
+    combo = 0;
+
+    timeLeft = gameTime;
+
+    tapsDisplay.textContent = "0";
+    comboDisplay.textContent = "0";
+
+    timeDisplay.textContent =
+        timeLeft;
+
+    speedDisplay.textContent =
+        "0";
+
+    speedFill.style.width =
+        "0%";
+
+    progress.style.width =
+        "100%";
+
+    effort.style.borderWidth =
+        "0";
+
+    monster.style.display =
+        "block";
+
+    moveMonster();
+
+    timer = setInterval(() => {
+
+        timeLeft--;
+
+        timeDisplay.textContent =
+            timeLeft;
+
+        const percent =
+            (timeLeft / gameTime) * 100;
+
+        progress.style.width =
+            percent + "%";
+
+        calculateSpeed();
+
+        if(timeLeft <= 0) {
+
+            endGame();
+
+        }
+
+    }, 1000);
+
+}
+
+
+/* END GAME */
+
+function endGame() {
+
+    clearInterval(timer);
+
+    timer = null;
+
+    playing = false;
+
+    monster.style.display = "none";
+
+    const percentage =
+        calculateSpeed();
+
+    if(taps > bestScore) {
+
+        bestScore =
+            taps;
+
+        bestDisplay.textContent =
+            bestScore;
+    }
+
+    finalScore.textContent =
+        taps;
+
+    finalSpeed.textContent =
+        percentage;
+
+    if(percentage >= 90) {
+
+        resultMessage.textContent =
+            "🔥 INSANE SPEED! Your fingers were flying!";
+
+    } else if(percentage >= 70) {
+
+        resultMessage.textContent =
+            "⚡ AMAZING! That was extremely fast!";
+
+    } else if(percentage >= 50) {
+
+        resultMessage.textContent =
+            "💪 GREAT JOB! Keep practicing!";
+
+    } else if(percentage >= 25) {
+
+        resultMessage.textContent =
+            "👀 NICE! Try to tap even faster!";
+
+    } else {
+
+        resultMessage.textContent =
+            "🌱 KEEP TRYING! Beat your score next time!";
+
+    }
+
+    results.style.display =
+        "flex";
+}
+
+
+/* RESTART */
+
+restartBtn.addEventListener(
+    "click",
+    () => {
+
+        results.style.display =
+            "none";
+
+        showReadyScreen();
+
+    }
+);
+
+
+/* HOME */
+
+homeBtn.addEventListener(
+    "click",
+    () => {
+
+        clearInterval(timer);
+        clearInterval(countdownTimer);
+
+        playing = false;
+
+        results.style.display =
+            "none";
+
+        readyScreen.style.display =
+            "none";
+
+        menu.style.display =
+            "flex";
+
+        showPanel(mainPanel);
+
+        monster.style.display =
+            "none";
+
+        taps = 0;
+        combo = 0;
+
+        timeLeft = gameTime;
+
+        tapsDisplay.textContent =
+            "0";
+
+        comboDisplay.textContent =
+            "0";
+
+        timeDisplay.textContent =
+            gameTime;
+
+        speedDisplay.textContent =
+            "0";
+
+        speedFill.style.width =
+            "0%";
+
+        progress.style.width =
+            "100%";
+
+        effort.style.borderWidth =
+            "0";
+
+    }
+);
+
+
+/* RESIZE */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if(playing) {
+            moveMonster();
+        }
+
+    }
+);
+
+
+/* INITIALIZE */
+
+timeDisplay.textContent =
+    gameTime;
+
+monster.style.display =
+    "none";
+
+</script>
+
+</body>
+</html>
+
