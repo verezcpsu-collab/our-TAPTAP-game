@@ -926,6 +926,128 @@ body {
 
 
 
+.transition-loading-wrap {
+    display: none;
+    width: min(88vw, 760px);
+    margin: 14px auto 0;
+    text-align: left;
+}
+
+.loading-screen.transition-mode .transition-loading-wrap {
+    display: block;
+}
+
+.loading-screen.transition-mode .loading-ui {
+    margin-bottom: 5vh;
+}
+
+.loading-screen.transition-mode .loading-percent {
+    color: #d9ff00;
+    text-shadow: 0 0 10px rgba(190,255,0,.55);
+    text-align: right;
+    font-size: 15px;
+    letter-spacing: 3px;
+    margin-bottom: 7px;
+}
+
+.transition-loading-label {
+    color: #d9ff00;
+    text-shadow: 0 0 10px rgba(190,255,0,.65);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,.78);
+    margin-bottom: 8px;
+}
+
+
+.transition-loading-track::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 7px;
+    background:
+        radial-gradient(circle at 7% 0, #d9ff00 0 5px, transparent 6px),
+        radial-gradient(circle at 24% 0, #b7f000 0 3px, transparent 4px),
+        radial-gradient(circle at 43% 0, #d9ff00 0 6px, transparent 7px),
+        radial-gradient(circle at 67% 0, #b7f000 0 4px, transparent 5px),
+        radial-gradient(circle at 86% 0, #d9ff00 0 5px, transparent 6px);
+    filter: drop-shadow(0 0 5px rgba(190,255,0,.9));
+    pointer-events: none;
+}
+
+.transition-loading-track {
+    position: relative;
+    height: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.45);
+    background: rgba(5,0,15,.72);
+    box-shadow: 0 0 18px rgba(190,255,0,.34), inset 0 0 12px rgba(255,255,255,.08);
+    clip-path: polygon(0 0, 98% 0, 100% 50%, 98% 100%, 0 100%, 2% 50%);
+}
+
+.transition-loading-grid {
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 28px,
+            rgba(255,255,255,.09) 29px 30px
+        );
+}
+
+.transition-loading-bar {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    bottom: 2px;
+    width: 1%;
+    background: linear-gradient(90deg, #b7f000, #fff36a, #b7f000);
+    box-shadow: 0 0 12px rgba(190,255,0,.95);
+    transition: width .08s linear;
+}
+
+.transition-loading-glow {
+    position: absolute;
+    top: -8px;
+    width: 5px;
+    height: 34px;
+    left: 0%;
+    background: white;
+    box-shadow: 0 0 12px white, 0 0 28px #d9ff00;
+    transform: translateX(-50%);
+    transition: left .08s linear;
+}
+
+.transition-loading-points {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding: 0 3px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,.38);
+}
+
+@media (max-width: 600px) {
+    .transition-loading-wrap {
+        width: 92vw;
+    }
+
+    .transition-loading-label {
+        font-size: 9px;
+        letter-spacing: 3px;
+    }
+
+    .transition-loading-track {
+        height: 15px;
+    }
+}
+
 .loading-percent {
     margin-top: 12px;
     font-size: 18px;
@@ -1034,6 +1156,17 @@ body {
 <div class="loading-screen" id="loadingScreen">
     <div class="loading-ui">
         <div class="loading-percent" id="loadingPercent">loading 1%</div>
+        <div class="transition-loading-wrap" id="transitionLoadingWrap">
+            <div class="transition-loading-label" id="transitionLoadingLabel">SYSTEM TRANSFER</div>
+            <div class="transition-loading-track">
+                <div class="transition-loading-grid"></div>
+                <div class="transition-loading-bar" id="transitionLoadingBar"></div>
+                <div class="transition-loading-glow" id="transitionLoadingGlow"></div>
+            </div>
+            <div class="transition-loading-points">
+                <span>01</span><span>02</span><span>03</span><span>04</span><span>05</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1558,7 +1691,7 @@ body {
 <div class="result-box">
 
     <div class="result-title">
-        TIME'S UP!
+        👹 TIME'S UP!
     </div>
 
     <div class="final-score" id="finalScore">
@@ -1587,14 +1720,14 @@ body {
             class="result-button restart-button"
             id="restartBtn"
         >
-            RESTART
+            🔄 RESTART
         </button>
 
         <button
             class="result-button home-button"
             id="homeBtn"
         >
-            HOME
+            🏠 HOME
         </button>
 
     </div>
@@ -1630,6 +1763,18 @@ const loadingScreen =
 
 const loadingPercent =
     document.getElementById("loadingPercent");
+
+const transitionLoadingWrap =
+    document.getElementById("transitionLoadingWrap");
+
+const transitionLoadingLabel =
+    document.getElementById("transitionLoadingLabel");
+
+const transitionLoadingBar =
+    document.getElementById("transitionLoadingBar");
+
+const transitionLoadingGlow =
+    document.getElementById("transitionLoadingGlow");
 
 const welcomeScreen =
     document.getElementById("welcomeScreen");
@@ -1745,21 +1890,67 @@ let mouseSensitivity = 1.00;
 
 /* LOADING SCREEN */
 function runLoadingScreen() {
+    runTransitionLoading(() => {
+        welcomeScreen.style.display = "flex";
+    });
+}
+
+/* REUSABLE LOADING TRANSITION
+   Used before starting the game and before returning home. */
+function runTransitionLoading(onComplete) {
+
+    loadingScreen.classList.add("transition-mode");
+    loadingScreen.style.display = "flex";
+
+    transitionLoadingLabel.textContent =
+        "SYSTEM TRANSFER";
+
     let percent = 1;
-loadingPercent.textContent = "loading " + percent + "%";
+
+    loadingPercent.textContent =
+        "loading " + percent + "%";
+
+    transitionLoadingBar.style.width =
+        percent + "%";
+
+    transitionLoadingGlow.style.left =
+        percent + "%";
 
     const loadingTimer = setInterval(() => {
+
         percent++;
-loadingPercent.textContent = "loading " + percent + "%";
+
+        loadingPercent.textContent =
+            "loading " + percent + "%";
+
+        transitionLoadingBar.style.width =
+            percent + "%";
+
+        transitionLoadingGlow.style.left =
+            percent + "%";
 
         if (percent >= 100) {
+
             clearInterval(loadingTimer);
 
+            transitionLoadingLabel.textContent =
+                "TRANSFER COMPLETE";
+
             setTimeout(() => {
+
                 loadingScreen.style.display = "none";
-                welcomeScreen.style.display = "flex";
+                loadingScreen.classList.remove("transition-mode");
+
+                transitionLoadingBar.style.width = "1%";
+                transitionLoadingGlow.style.left = "1%";
+
+                if (typeof onComplete === "function") {
+                    onComplete();
+                }
+
             }, 350);
         }
+
     }, 25);
 }
 
@@ -1888,6 +2079,31 @@ fullscreenBtn.addEventListener(
 );
 
 
+
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+        if (
+            event.target.tagName === "INPUT" ||
+            event.target.tagName === "TEXTAREA"
+        ) {
+            return;
+        }
+
+        if (
+            event.key.toLowerCase() === "f" &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            !event.metaKey
+        ) {
+            event.preventDefault();
+            toggleFullscreen();
+        }
+    }
+);
+
+
 /* FULLSCREEN TEXT */
 
 document.addEventListener(
@@ -1906,75 +2122,91 @@ document.addEventListener(
 
         }
 
-        updateMonsterSize();
-
     }
 );
 
-
-/* F KEY = FULLSCREEN */
-
-document.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (
-            event.target.tagName === "INPUT" ||
-            event.target.tagName === "TEXTAREA"
-        ) {
-            return;
-        }
-
-        if (
-            event.key.toLowerCase() === "f" &&
-            !event.ctrlKey &&
-            !event.altKey &&
-            !event.metaKey
-        ) {
-
-            event.preventDefault();
-            toggleFullscreen();
-
-        }
-
-    }
-);
-
-
-/* RESPONSIVE MONSTER SIZE */
 
 function updateMonsterSize() {
 
-    const rect =
-        arena.getBoundingClientRect();
+    const rect = arena.getBoundingClientRect();
 
-    /* Size follows the smaller screen/arena dimension */
-    const baseSize =
-        Math.min(rect.width, rect.height) * 0.26;
+    /* Scale from the actual playable arena, not the browser window. */
+    const shortestSide =
+        Math.min(rect.width, rect.height);
 
+    /*
+     * Keep the monster proportional on phones, tablets,
+     * laptops and fullscreen monitors.
+     */
     const size =
         Math.round(
             Math.max(
-                80,
+                64,
                 Math.min(
-                    145,
-                    baseSize
+                    150,
+                    shortestSide * 0.24
                 )
             )
         );
 
-    monster.style.width =
-        size + "px";
+    monster.style.width = size + "px";
+    monster.style.height = size + "px";
 
-    monster.style.height =
-        size + "px";
+    /* Keep the monster inside the arena after resizing. */
+    const currentLeft = parseFloat(monster.style.left) || 0;
+    const currentTop = parseFloat(monster.style.top) || 45;
+
+    const padding = Math.max(10, shortestSide * 0.025);
+    const minY = Math.min(45, Math.max(10, rect.height - size - padding));
+
+    const maxLeft =
+        Math.max(
+            padding,
+            rect.width - size - padding
+        );
+
+    const maxTop =
+        Math.max(
+            minY,
+            rect.height - size - padding
+        );
+
+    monster.style.left =
+        Math.min(
+            maxLeft,
+            Math.max(padding, currentLeft)
+        ) + "px";
+
+    monster.style.top =
+        Math.min(
+            maxTop,
+            Math.max(minY, currentTop)
+        ) + "px";
 }
+
+
+
+function handleMonsterViewportResize() {
+    requestAnimationFrame(() => {
+        updateMonsterSize();
+
+        if (playing) {
+            moveMonster();
+        }
+    });
+}
+
+document.addEventListener(
+    "fullscreenchange",
+    handleMonsterViewportResize
+);
 
 
 /* MOVE MONSTER */
 
 function moveMonster() {
 
+    /* Recalculate size every time the monster moves. */
     updateMonsterSize();
 
     const rect =
@@ -1986,9 +2218,23 @@ function moveMonster() {
     const monsterHeight =
         monster.offsetHeight;
 
-    const padding = 25;
+    const padding =
+        Math.max(
+            10,
+            Math.min(
+                35,
+                Math.min(rect.width, rect.height) * 0.035
+            )
+        );
 
-    const minY = 45;
+    const minY =
+        Math.min(
+            45,
+            Math.max(
+                10,
+                rect.height - monsterHeight - padding
+            )
+        );
 
     const maxX =
         Math.max(
@@ -2030,7 +2276,10 @@ function moveMonster() {
 
     /* Higher sensitivity = more responsive monster repositioning */
     const moveSpeed =
-        Math.max(0.035, 0.12 / mouseSensitivity);
+        Math.max(
+            0.035,
+            0.12 / mouseSensitivity
+        );
 
     monster.style.transitionDuration =
         moveSpeed + "s";
@@ -2239,16 +2488,23 @@ function showReadyScreen() {
 
     results.style.display = "none";
 
-    readyScreen.style.display = "flex";
+    readyScreen.style.display = "none";
 
-    readyTitle.textContent = "READY?";
+    /* Loading appears after START and before the READY / 3-second countdown */
+    runTransitionLoading(() => {
 
-    readyText.textContent =
-        "Get ready to tap the monster!";
+        readyScreen.style.display = "flex";
 
-    okayBtn.style.display = "block";
+        readyTitle.textContent = "READY?";
 
-    countdown.style.display = "none";
+        readyText.textContent =
+            "Get ready to tap the monster!";
+
+        okayBtn.style.display = "block";
+
+        countdown.style.display = "none";
+
+    });
 
 }
 
@@ -2435,27 +2691,27 @@ function endGame() {
     if(percentage >= 90) {
 
         resultMessage.textContent =
-            "INSANE SPEED! Your fingers were flying!";
+            "🔥 INSANE SPEED! Your fingers were flying!";
 
     } else if(percentage >= 70) {
 
         resultMessage.textContent =
-            "AMAZING! That was extremely fast!";
+            "⚡ AMAZING! That was extremely fast!";
 
     } else if(percentage >= 50) {
 
         resultMessage.textContent =
-            "GREAT JOB! Keep practicing!";
+            "💪 GREAT JOB! Keep practicing!";
 
     } else if(percentage >= 25) {
 
         resultMessage.textContent =
-            "NICE! Try to tap even faster!";
+            "👀 NICE! Try to tap even faster!";
 
     } else {
 
         resultMessage.textContent =
-            "KEEP TRYING! Beat your score next time!";
+            "🌱 KEEP TRYING! Beat your score next time!";
 
     }
 
@@ -2497,9 +2753,7 @@ homeBtn.addEventListener(
             "none";
 
         menu.style.display =
-            "flex";
-
-        showPanel(mainPanel);
+            "none";
 
         monster.style.display =
             "none";
@@ -2530,6 +2784,16 @@ homeBtn.addEventListener(
         effort.style.borderWidth =
             "0";
 
+        /* Loading appears before returning to the HOME page */
+        runTransitionLoading(() => {
+
+            menu.style.display =
+                "flex";
+
+            showPanel(mainPanel);
+
+        });
+
     }
 );
 
@@ -2539,8 +2803,6 @@ homeBtn.addEventListener(
 window.addEventListener(
     "resize",
     () => {
-
-        updateMonsterSize();
 
         if(playing) {
             moveMonster();
@@ -2562,7 +2824,6 @@ timeDisplay.textContent =
 monster.style.display =
     "none";
 
-/* Set the correct monster size for the current device */
 updateMonsterSize();
 
 runLoadingScreen();
